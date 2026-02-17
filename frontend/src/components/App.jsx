@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Header from "./Header"
 import Footer from "./Footer"
+import UniversityCalendar from "./UniversityCalendar";
 
 function App() {
   return (
@@ -15,7 +16,7 @@ function App() {
             <Route path="/" element={<h1>Home</h1>} />
             <Route path="/courses" element={<h1>Course</h1>} />
             <Route path="/grades" element={<h1>Grades</h1>} />
-            <Route path="/calendar" element={<h1>Calendar</h1>} />
+            <Route path="/calendar" element={<UniversityCalendar />} /> 
             <Route path="*" element={<h1>404 Not Found</h1>} />
           </Routes>
         </main>
