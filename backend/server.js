@@ -28,6 +28,6 @@ app.use("/api/session", activitiesRoutes);
 
 app.use("/api", calendarRoutes);
 
-app.listen(port, () => {
+app.listen(port, "0.0.0.0", () => {
 	console.log(`Server is running on port ${port}`);
 });

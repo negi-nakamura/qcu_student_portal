@@ -7,7 +7,7 @@ function Header() {
     const [menuOpen, setMenuOpen] = useState(false);
 
     return (
-        <header className="bg-primary-500 h-15 flex items-center justify-between px-5 sm:px-5 md:px-5 lg:px-20 relative">
+        <header className="bg-primary-500 h-15 flex items-center justify-between px-5 sm:px-5 md:px-5 lg:px-20 sticky top-0 left-0 right-0 z-50">
 
             <div className="flex gap-8 md:gap-4 lg:gap-8">
                 <Link to="/">
