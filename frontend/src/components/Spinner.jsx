@@ -8,7 +8,7 @@ const Spinner = ({ size = 16, text = "Loading" }) => {
     <div className="absolute inset-0 z-100">
       <div
         role="status"
-        className="flex flex-col items-center gap-4 min-h-screen justify-center bg-white"
+        className="flex flex-col items-center -mt-10 sm:mt-0 gap-4 min-h-screen justify-center bg-white"
       >
         <svg className={`${sizeClass} animate-spin`} viewBox="0 0 100 100">
           <circle

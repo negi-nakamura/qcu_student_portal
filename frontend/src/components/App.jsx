@@ -36,7 +36,7 @@ function AppContent() {
 				setUser(response.data.user);
 			} catch (err) {
 				setUser(null);
-				setError(err.response?.data?.message || "Failed to fetch user data");
+				setError(err.response.data.message);
 			} finally {
 				setLoading(false);
 			}		
@@ -58,15 +58,17 @@ function AppContent() {
 
 	return (
 		<div className="min-h-screen flex flex-col">
-			{!isLoginPage && <Header />}
+			{!isLoginPage && <Header setUser={setUser} />}
 
 			<main className="grow flex justify-center">
 				<Routes>
-					<Route path="/login" element={<Login setUser={setUser} setLoading={setLoading}/>} />
-            		<Route path="/" element={<Dashboard />} />	
+					<Route path="/login" element={<Login setUser={setUser}/>} />
+            		<Route path="/" element={<h1>Dashboard</h1>} />	
 					<Route path="/courses" element={<h1>Course</h1>} />
-					<Route path="/grades" element={<Grades />} />
+					<Route path="/grades" element={<h1>Grades</h1>} />
 					<Route path="/calendar" element={<UniversityCalendar />} />
+					<Route path="/profile" element={<h1>Profile</h1>} />
+					<Route path="/settings" element={<h1>Settings</h1>} />
 					<Route path="*" element={<h1>404 Not Found</h1>} />
 				</Routes>
 			</main>
