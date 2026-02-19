@@ -213,7 +213,7 @@ END:VEVENT
 
   return (
     <>
-      {/* Modal with shadow */}
+
       {isPreviewOpen && (
         <div className="fixed top-1/4 left-1/2 transform -translate-x-1/2 bg-white rounded-xl shadow-lg max-w-md w-full z-50 p-6">
           <h3 className="font-semibold text-lg mb-4 flex items-center gap-2 text-gray-900 select-none">
@@ -258,7 +258,7 @@ END:VEVENT
       )}
 
       <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow-xl select-none">
-        {/* Title */}
+
         <h1 className="text-lg font-semibold mb-1 flex items-center gap-2 text-gray-900">
           <svg
             className="w-6 h-6 fill-current text-gray-900"
@@ -273,14 +273,14 @@ END:VEVENT
           {semesterLabel} | {format(semesterStart, "MMMM d, yyyy")} - {format(semesterEnd, "MMMM d, yyyy")}
         </p>
 
-        {/* Calendar */}
+
         <div className="bg-white rounded-xl shadow-lg p-4">
           {renderHeader()}
           {renderDays()}
           {renderCells()}
         </div>
 
-        {/* Events */}
+
         <section className="mt-6">
           <h2 className="flex items-center gap-2 text-gray-900 font-semibold mb-3 text-sm select-none">
             <svg
@@ -311,7 +311,7 @@ END:VEVENT
           </div>
         </section>
 
-        {/* Action Buttons */}
+
         <div className="mt-8 flex justify-end gap-3">
           <button
             onClick={() => setIsPreviewOpen(true)}
