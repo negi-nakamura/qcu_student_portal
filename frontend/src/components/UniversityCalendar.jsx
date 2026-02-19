@@ -155,6 +155,7 @@ function UniversityCalendar() {
 		document.body.removeChild(link);
 	};
 
+<<<<<<< HEAD
 	const renderHeader = () => (
 		<>
 			<div className="flex justify-between items-center mb-4 pt-3 px-2 sm:px-5 gap-2 sm:gap-15">
@@ -464,6 +465,154 @@ function UniversityCalendar() {
 			</div>
 		</>
 	);
+=======
+  return (
+    <>
+
+      {isPreviewOpen && (
+        <div className="fixed top-1/4 left-1/2 transform -translate-x-1/2 bg-white rounded-xl shadow-lg max-w-md w-full z-50 p-6">
+          <h3 className="font-semibold text-lg mb-4 flex items-center gap-2 text-gray-900 select-none">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-6 h-6 text-gray-700"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7H3v12a2 2 0 002 2z" />
+            </svg>
+            Events Preview - {format(currentMonth, "MMMM yyyy")}
+          </h3>
+          <ul className="max-h-64 overflow-y-auto mb-6 space-y-3">
+            {eventsThisMonth.length ? (
+              eventsThisMonth.map((event) => (
+                <li key={event.id} className="border border-gray-200 rounded p-3 text-gray-900">
+                  <span className="font-semibold">{event.title}</span>
+                  <time className="block text-sm text-gray-500 mt-1" dateTime={event.startDate}>
+                    {format(parseISO(event.startDate), "MMMM d") +
+                      (event.startDate !== event.endDate
+                        ? ` - ${format(parseISO(event.endDate), "d")}`
+                        : "")}
+                  </time>
+                </li>
+              ))
+            ) : (
+              <p className="text-gray-500 text-center">No events this month.</p>
+            )}
+          </ul>
+          <button
+            onClick={() => setIsPreviewOpen(false)}
+            className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer select-none font-semibold"
+            aria-label="Close preview modal"
+            type="button"
+          >
+            Close
+          </button>
+        </div>
+      )}
+
+      <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow-xl select-none">
+
+        <h1 className="text-lg font-semibold mb-1 flex items-center gap-2 text-gray-900">
+          <svg
+            className="w-6 h-6 fill-current text-gray-900"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM5 20V9h14v11H5z" />
+          </svg>
+          University Calendar - Academic Year {academicYear}
+        </h1>
+        <p className="text-xs text-gray-600 mb-6">
+          {semesterLabel} | {format(semesterStart, "MMMM d, yyyy")} - {format(semesterEnd, "MMMM d, yyyy")}
+        </p>
+
+
+        <div className="bg-white rounded-xl shadow-lg p-4">
+          {renderHeader()}
+          {renderDays()}
+          {renderCells()}
+        </div>
+
+
+        <section className="mt-6">
+          <h2 className="flex items-center gap-2 text-gray-900 font-semibold mb-3 text-sm select-none">
+            <svg
+              className="w-4 h-4 fill-current text-gray-700"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+            >
+              <path d="M5 3v3H3v2h2v6H3v2h2v3h2v-3h6v3h2v-3h2v-2h-2v-6h2v-2h-2V3H5zm2 11h6v4H7v-4z" />
+            </svg>
+            All Events This Month
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            {eventsThisMonth.length > 0 ? (
+              eventsThisMonth.map((event) => (
+                <div
+                  key={event.id}
+                  className="bg-gray-100 rounded-md py-2 px-3 text-gray-900 flex flex-col cursor-default"
+                >
+                  <span className="font-semibold">{event.title}</span>
+                  <span className="text-xs text-gray-500 mt-1">
+                    📅 {formatEventDateRange(event.startDate, event.endDate)}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 col-span-2 text-center">No events this month</p>
+            )}
+          </div>
+        </section>
+
+
+        <div className="mt-8 flex justify-end gap-3">
+          <button
+            onClick={() => setIsPreviewOpen(true)}
+            className="flex items-center gap-2 border border-gray-400 rounded px-4 py-2 text-gray-900 hover:bg-gray-100 transition cursor-pointer select-none"
+            aria-label="Preview calendar events"
+            type="button"
+          >
+            <svg
+              className="w-5 h-5 stroke-gray-900"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 16l-4-4 4-4"></path>
+            </svg>
+            Preview
+          </button>
+          <button
+            onClick={downloadICS}
+            className="flex items-center gap-2 bg-blue-700 text-white rounded px-4 py-2 hover:bg-blue-800 transition cursor-pointer select-none"
+            aria-label="Download calendar as ICS file"
+            type="button"
+          >
+            <svg
+              className="w-5 h-5 stroke-white"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 5v14"></path>
+              <path d="M5 12l7 7 7-7"></path>
+            </svg>
+            Download Calendar
+          </button>
+        </div>
+      </div>
+    </>
+  );
+>>>>>>> c0ebe95ae7a000a4312d1b582c9bddaad0cf72c4
 }
 
 export default UniversityCalendar;

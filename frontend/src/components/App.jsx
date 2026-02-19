@@ -5,7 +5,10 @@ import axios from "axios";
 import Header from "./Header";
 import Footer from "./Footer";
 import Login from "./Login";
+import Grades from "./Grades";
+import Dashboard from "./Dashboard";
 import UniversityCalendar from "./UniversityCalendar";
+
 import Spinner from "./Spinner";
 
 axios.defaults.withCredentials = true;
@@ -60,9 +63,9 @@ function AppContent() {
 			<main className="grow flex justify-center">
 				<Routes>
 					<Route path="/login" element={<Login setUser={setUser} setLoading={setLoading}/>} />
-					<Route path="/" element={<h1>Home <br/>Welcome to the Quezon City University Student Portal</h1>} />
+            		<Route path="/" element={<Dashboard />} />	
 					<Route path="/courses" element={<h1>Course</h1>} />
-					<Route path="/grades" element={<h1>Grades</h1>} />
+					<Route path="/grades" element={<Grades />} />
 					<Route path="/calendar" element={<UniversityCalendar />} />
 					<Route path="*" element={<h1>404 Not Found</h1>} />
 				</Routes>
