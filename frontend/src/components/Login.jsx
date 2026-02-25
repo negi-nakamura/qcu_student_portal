@@ -49,7 +49,7 @@ function Login({setUser}) {
 
 			<div className="absolute inset-0 -z-10 min-h-screen h-full bg-[rgba(255,255,255,0.01)] backdrop-blur-[5px]"></div>
 
-			<div className="w-full max-w-sm -mt-20 sm:mt-0 pt-8 pb-5 px-8 space-y-6 bg-[rgba(243,243,255,0.9)] backdrop-blur-[3px] rounded shadow">
+			<div className="w-full max-w-92.5 -mt-20 sm:mt-0 pt-8 pb-5 px-8 space-y-6 bg-[rgba(243,243,255,0.9)] backdrop-blur-[3px] rounded shadow">
 
 				<img src="src/assets/qcu_logo.png" alt="QCU Logo" className="w-24 h-24 mx-auto" />
 

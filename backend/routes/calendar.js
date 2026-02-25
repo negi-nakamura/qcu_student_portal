@@ -4,15 +4,13 @@ import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.get("/calendar", authenticateToken, async (req, res) => {
+router.get("/calendar/university", authenticateToken, async (req, res) => {
 	try {
 		const { school_year, semester, event_type } = req.query;
 
 		const currentYear = new Date().getFullYear();
 		const defaultSchoolYear = `${currentYear - 1}-${currentYear}`;
 		const selectedSchoolYear = school_year || defaultSchoolYear;
-
-		const baseYear = parseInt(selectedSchoolYear.split("-")[0]);
 
 		let uniQuery = `
 			SELECT 
@@ -40,31 +38,57 @@ router.get("/calendar", authenticateToken, async (req, res) => {
 			values.push(event_type);
 		}
 
+		uniQuery += ` ORDER BY start_date`;
+
 		const universityResult = await pool.query(uniQuery, values);
-
-		const holidayQuery = `
-			SELECT
-				id,
-				title,
-				TO_CHAR(MAKE_DATE($1, month, day), 'YYYY-MM-DD') AS start_date,
-				TO_CHAR(MAKE_DATE($1, month, day), 'YYYY-MM-DD') AS end_date,
-				'holiday' AS event_type,
-				'Holiday' AS source
-			FROM holiday_calendar
-		`;
-
-		const holidayResult = await pool.query(holidayQuery, [baseYear]);
-
-		const events = [...universityResult.rows, ...holidayResult.rows].sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
 
 		res.json({
 			school_year: selectedSchoolYear,
-			total_events: events.length,
-			events
+			total_events: universityResult.rows.length,
+			events: universityResult.rows,
+			university_events: universityResult.rows 
 		});
 
 	} catch (err) {
 		console.error(err);
+		res.status(500).json({ message: "Server error" });
+	}
+});
+
+router.get("/calendar/holidays", authenticateToken, async (req, res) => {
+	try {
+		const holidayQuery = `
+			SELECT
+				id,
+				title,
+				month,
+				day,
+				'holiday' AS event_type,
+				'Holiday' AS source
+			FROM holiday_calendar
+			ORDER BY month, day
+		`;
+
+		const holidayResult = await pool.query(holidayQuery);
+
+		const holidays = holidayResult.rows.map(holiday => ({
+			id: holiday.id,
+			title: holiday.title,
+			month: holiday.month,
+			day: holiday.day,
+			event_type: holiday.event_type,
+			source: holiday.source,
+			formatted_date: `${new Date(2000, holiday.month - 1, holiday.day).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`,
+			month_day: `${String(holiday.month).padStart(2, '0')}-${String(holiday.day).padStart(2, '0')}`
+		}));
+
+		res.json({
+			total_holidays: holidays.length,
+			holidays: holidays
+		});
+
+	} catch (err) {
+		console.error("Error fetching holidays:", err);
 		res.status(500).json({ message: "Server error" });
 	}
 });
