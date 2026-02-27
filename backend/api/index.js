@@ -2,16 +2,15 @@ import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import authRoutes from "./routes/auth.js";
-import activitiesRoutes from "./routes/activities.js";
-import calendarRoutes from "./routes/calendar.js";
-import postRoutes from "./routes/posts.js"
-import courseRoutes from "./routes/course.js"
+import authRoutes from "../routes/auth.js";
+import activitiesRoutes from "../routes/activities.js";
+import calendarRoutes from "../routes/calendar.js";
+import postRoutes from "../routes/posts.js"
+import courseRoutes from "../routes/course.js"
 
 dotenv.config();
 
 const app = express();
-const port = process.env.SERVER_PORT || 5000;
 
 app.use(
   cors({
@@ -34,6 +33,4 @@ app.use("/api", postRoutes);
 
 app.use("/api", courseRoutes);
 
-app.listen(port, "0.0.0.0", () => {
-	console.log(`Server is running on port ${port}`);
-});
+export default app;
