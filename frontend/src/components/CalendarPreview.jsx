@@ -2,23 +2,23 @@ import { useState, useEffect, useMemo } from "react";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, subMonths, addMonths, isSameMonth, isSameDay, parseISO, isWithinInterval, isBefore, isAfter, getMonth, getDate, isEqual } from "date-fns";
 import { Icon } from "@iconify/react";
 import axios from "axios";
+import { NavLink } from "react-router-dom";
 
-const academicYear = "2025-2026";
-const semesterLabel = "2nd Semester";
-const semesterStart = new Date(2026, 0, 12);
-const semesterEnd = new Date(2026, 4, 26);
+const today = new Date();
 
 function CalendarPreview() {
 
-	const today = new Date();
-	const initialMonth = isWithinInterval(today, {start: semesterStart, end: semesterEnd}) ? today : semesterStart;
-
+	const [academicYear, setAcademicYear] = useState(null)
+	const [semesterLabel, setSemesterLabel] = useState(null)
+	const [semesterStart, setSemesterStart] = useState(null)
+	const [semesterEnd, setSemesterEnd] = useState(null)
 	const [universityEvents, setUniversityEvents] = useState([]);
 	const [holidays, setHolidays] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
-	const [currentMonth, setCurrentMonth] = useState(initialMonth);
+	const [currentMonth, setCurrentMonth] = useState(null);
 	const [selectedDayEvents, setSelectedDayEvents] = useState([]);
+	const [selectedDayDate, setSelectedDayDate] = useState(null); 
 	const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 	const [isDayModalOpen, setIsDayModalOpen] = useState(false);
 
@@ -38,7 +38,17 @@ function CalendarPreview() {
 			try {
 				setLoading(true);
 				const response = await axios.get(`/api/calendar/university?school_year=${encodeURIComponent(academicYear)}`);
-				console.log("Fetched university events:", response.data);
+
+				const school_year = response.data.school_year
+				const semester = response.data.semester
+				const semester_start = new Date(response.data.semester_start)
+				const semester_end = new Date(response.data.semester_end)
+
+				setAcademicYear(school_year)
+				setSemesterLabel(semester)
+				setSemesterStart(semester_start)
+				setSemesterEnd(semester_end)
+				setCurrentMonth(isWithinInterval(today, {start: semester_start, end: semester_end}) ? today : semester_start)
 				
 				const transformedEvents = response.data.events.map(event => ({
 					id: `uni-${event.id}`,
@@ -69,7 +79,6 @@ function CalendarPreview() {
 		const fetchHolidays = async () => {
 			try {
 				const response = await axios.get(`/api/calendar/holidays`);
-				console.log("Fetched holidays:", response.data);
 				
 				const transformedHolidays = response.data.holidays.map(holiday => ({
 					id: `hol-${holiday.id}`,
@@ -238,39 +247,15 @@ function CalendarPreview() {
 
 		if (allDayEvents.length > 0) {
 			setSelectedDayEvents(allDayEvents);
+			setSelectedDayDate(date); // Store the clicked date
 			setIsDayModalOpen(true);
 		}
 	};
 
-	const downloadICS = () => {
-		let icsContent = `BEGIN:VCALENDAR
-			VERSION:2.0
-			PRODID:-//QCU Student Portal//Calendar//EN
-			CALSCALE:GREGORIAN
-			METHOD:PUBLISH
-			`;
-
-		eventsThisMonth.forEach((event) => {
-			const dtStart = format(parseISO(event.startDate), "yyyyMMdd");
-			const dtEnd = format(addDays(parseISO(event.endDate), 1), "yyyyMMdd");
-			icsContent += `BEGIN:VEVENT
-				SUMMARY:${event.title}
-				DTSTART;VALUE=DATE:${dtStart}
-				DTEND;VALUE=DATE:${dtEnd}
-				END:VEVENT
-				`;
-		});
-
-		icsContent += "END:VCALENDAR";
-
-		const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
-		const url = URL.createObjectURL(blob);
-		const link = document.createElement("a");
-		link.href = url;
-		link.download = `qcu_calendar_${format(currentMonth, "yyyy_MM")}.ics`;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
+	const closeDayModal = () => {
+		setIsDayModalOpen(false);
+		setSelectedDayDate(null);
+		setSelectedDayEvents([]);
 	};
 
 	const renderHeader = () => (
@@ -444,9 +429,66 @@ function CalendarPreview() {
 	// Loading state
 	if (loading && !universityEvents.length) {
 		return (
-			<div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[900px]">
-				<div className="flex justify-center items-center h-64">
-					<div className="text-gray-500">Loading calendar...</div>
+			<div className="animate-pulse flex flex-col h-full">
+				
+				{/* Header skeleton */}
+				<div className="flex justify-between items-center mb-2">
+					<div className="flex items-center gap-1.5">
+					<div className="h-5 w-5 bg-gray-200 rounded-full"></div>
+					<div className="h-4 w-32 bg-gray-200 rounded"></div>
+					</div>
+						<div className="flex items-center gap-1.5">
+						<div className="h-4 w-16 bg-gray-200 rounded"></div>
+						<div className="h-5 w-5 bg-gray-200 rounded-full"></div>
+					</div>
+				</div>
+
+				<div className="container mx-auto max-w-[900px]">
+					<div className="w-full rounded-xl bg-neutral-50 px-4 sm:px-6 md:px-10 pb-6 pt-8 shadow-lg">
+
+						{/* Header skeleton */}
+						<div className="flex justify-between items-center mb-4">
+							<div className="h-8 w-8 bg-gray-200 rounded"></div>
+							<div className="h-6 w-40 bg-gray-200 rounded"></div>
+							<div className="h-8 w-8 bg-gray-200 rounded"></div>
+						</div>
+
+
+						{/* Weekday labels */}
+						<div className="grid grid-cols-7 gap-2 mb-2">
+							{Array.from({ length: 7 }).map((_, i) => (
+								<div key={i} className="h-4 bg-gray-200 rounded"></div>
+							))}
+						</div>
+
+						{/* Calendar grid skeleton */}
+						<div className="grid grid-cols-7 gap-1">
+							{Array.from({ length: 35 }).map((_, i) => (
+								<div
+									key={i}
+									className="h-12 sm:h-16 bg-gray-200 rounded"
+								></div>
+							))}
+						</div>
+
+						{/* Events section skeleton */}
+						<div className="mt-6">
+							<div className="h-5 w-48 bg-gray-200 rounded mb-4"></div>
+
+							<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+								{Array.from({ length: 4 }).map((_, i) => (
+									<div
+										key={i}
+										className="bg-white border border-gray-200 rounded-md p-4 space-y-2"
+									>
+										<div className="h-4 bg-gray-200 rounded w-3/4"></div>
+										<div className="h-3 bg-gray-200 rounded w-1/2"></div>
+									</div>
+								))}
+							</div>
+						</div>
+
+					</div>
 				</div>
 			</div>
 		);
@@ -470,7 +512,7 @@ function CalendarPreview() {
 					<div
 						className="fixed inset-0 backdrop-blur-sm z-100"
 						style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
-						onClick={() => setIsDayModalOpen(false)}
+						onClick={closeDayModal}
 					></div>
 
 					<div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 
@@ -481,15 +523,11 @@ function CalendarPreview() {
 						
 						<h3 className="font-semibold text-base sm:text-lg mb-4 text-gray-900 pr-8">
 							Events on{" "}
-							{selectedDayEvents[0] && (
-								selectedDayEvents[0].event_type === 'holiday'
-									? format(selectedDayEvents[0].displayDate || new Date(), "MMMM d, yyyy")
-									: format(parseISO(selectedDayEvents[0].startDate), "MMMM d, yyyy")
-							)}
+							{selectedDayDate ? format(selectedDayDate, "MMMM d, yyyy") : ""}
 						</h3>
 
 						<button 
-							onClick={() => setIsDayModalOpen(false)}
+							onClick={closeDayModal}
 							className="absolute top-3 right-4 sm:hidden p-1 text-gray-500 hover:text-gray-700"
 							aria-label="Close"
 						>
@@ -571,7 +609,7 @@ function CalendarPreview() {
 
 						<div className="flex justify-end hidden sm:flex">
 							<button
-								onClick={() => setIsDayModalOpen(false)}
+								onClick={closeDayModal}
 								className="w-full sm:w-auto px-5 py-2.5 sm:py-2 bg-primary-500 text-white rounded hover:bg-primary-600 transition text-sm sm:text-base"
 							>
 								Close
@@ -685,9 +723,20 @@ function CalendarPreview() {
 				</>
 			)}
 
-			<div className="container mx-auto  max-w-[900px]">
+			<div className="flex mb-2 justify-between items-center cursor-pointer">
+				<div className="flex items-center gap-1.5 text-neutral-800">
+					<Icon icon="solar:calendar-bold" className="sm:w-6 sm:h-6 "/>
+					<span className="text-sm font-medium sm:text-base">University Calendar</span>
+				</div>
+				<NavLink to="/calendar" className="flex items-center gap-1.5 text-primary-500">
+					<span className="text-xs font-medium sm:text-sm">View All</span>
+					<Icon icon="iconamoon:arrow-right-2-light" className="w-6 h-6"/>
+				</NavLink>
+			</div>	
 
-				<div className="w-full max-w-[900px] mx-auto mt-2 mb-10 rounded-xl select-none bg-neutral-50 px-4 sm:px-6 md:px-10 pb-6 sm:pb-8 pt-4 sm:pt-8 shadow-lg">
+			<div className="container mx-auto max-w-[900px] sm:h-full">
+
+				<div className="w-full h-full max-w-[900px] mx-auto rounded-xl select-none bg-neutral-50 px-4 sm:px-6 md:px-10 pb-4 sm:pb-6 pt-4 sm:pt-8 shadow-lg">
 					{/* Calendar */}
 					<div className=" overflow-hidden">
 						{renderHeader()}
@@ -696,7 +745,7 @@ function CalendarPreview() {
 					</div>
 
 					{/* Events Sections */}
-					<section className="mt-4 sm:mt-6">
+					<section className="mt-4 sm:mt-6 ">
 						<h2 className="flex items-center gap-2 text-gray-900 font-semibold mb-3 select-none">
 							<Icon
 								icon="solar:calendar-bold"
@@ -710,7 +759,7 @@ function CalendarPreview() {
 						</h2>
 
 						{(holidaysThisMonth.length > 0 || eventsThisMonth.length > 0) ? (
-							<div className="h-[150px] sm:h-[80px] overflow-y-auto pr-1">
+							<div className="sm:h-[80px] sm:overflow-y-auto pr-1">
 								<div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
 									{/* Holidays First */}
 									{holidaysThisMonth.map((holiday) => (

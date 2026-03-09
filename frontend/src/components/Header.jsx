@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef  } from "react";
 import { Icon } from "@iconify/react";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Spinner from "./Spinner";
 import Account from "./Account";
 
-function Header({ setUser }) {
+function Header({ setUser, setProfile, profile }) {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [dropdownOpen, setDropdownOpen] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const accountRef = useRef(null);
 	const navigate = useNavigate();
 
 	const logout = async () => {
@@ -20,6 +21,7 @@ function Header({ setUser }) {
 		} finally {
 			setLoading(false);
 			setUser(null);
+			setProfile(null)
 			setDropdownOpen(false);
 			setMenuOpen(false);
 			navigate("/login");
@@ -33,6 +35,20 @@ function Header({ setUser }) {
 			document.body.style.overflow = "auto";
 		};
 	}, [menuOpen]);
+
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (accountRef.current && !accountRef.current.contains(event.target)) {
+				setDropdownOpen(false);
+			}
+		};
+
+		document.addEventListener("mousedown", handleClickOutside);
+
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, []);
 
 	const desktopNavClass = ({ isActive }) =>
 		`flex justify-center items-center gap-1 transition ${
@@ -55,7 +71,7 @@ function Header({ setUser }) {
 			<div className="flex gap-8">
 				<NavLink to="/">
 					<img
-						src="/src/assets/qcu_logo.png"
+						src="/qcu_logo.png"
 						alt="Quezon City University Logo"
 						className="w-10"
 					/>
@@ -86,19 +102,58 @@ function Header({ setUser }) {
 			</div>
 
 			{/* Right Section */}
-			<div className="flex gap-5 items-center">
-				<div className="flex items-center mr-10 md:mr-0 relative cursor-pointer" onClick={() => setDropdownOpen(!dropdownOpen)}>
-					<div className="overflow-hidden rounded-full border border-white w-8">
-						<img src="/src/assets/default_profile.jpg" alt="Default Profile"/>
+			<div className="flex gap-5 items-center select-none">
+				{profile && (
+					<div
+					className="flex items-center mr-10 md:mr-0 cursor-pointer"
+					onClick={() => setDropdownOpen(!dropdownOpen)}
+					ref={accountRef}
+					>
+					<div className="overflow-hidden rounded-full w-8">
+						<img
+						src={profile?.profile_image_url || "/default_profile.jpg"}
+						alt="Default Profile"
+						/>
 					</div>
-					<Icon icon={dropdownOpen ? "iconamoon:arrow-up-2" : "iconamoon:arrow-down-2"} width={24} height={24} className="text-white"/>
-					<Account logout={logout} dropdownOpen={dropdownOpen} />
-				</div>
+					<div className="ml-1 w-5 h-5 text-white">
+						{dropdownOpen ? (
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M5 15l7-7 7 7"
+							/>
+						</svg>
+						) : (
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M19 9l-7 7-7-7"
+							/>
+						</svg>
+						)}
+					</div>
+					<Account logout={logout} dropdownOpen={dropdownOpen} setDropdownOpen={setDropdownOpen} profile={profile}/>
+					</div>
+				)}
 			</div>
 
 			{/* Mobile Hamburger */}
 			<button onClick={() => setMenuOpen(!menuOpen)} className="fixed top-3.5 right-5 z-50 md:hidden">
-				<img src={ menuOpen ? "/src/assets/hamburger_close.svg" : "/src/assets/hamburger_menu.svg" } alt="Menu" width={32} height={32}/>
+				<img src={ menuOpen ? "/hamburger_close.svg" : "/hamburger_menu.svg" } alt="Menu" width={32} height={32}/>
 			</button>
 
 			{/* Mobile Sidebar */}

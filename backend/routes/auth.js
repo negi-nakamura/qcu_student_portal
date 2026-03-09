@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import pool from "../config/db.js";
 import { authenticateToken } from "../middleware/auth.js";
 import { formatDateToObject } from "../utils/dateFormatter.js";
+import axios from "axios"
 
 const router = express.Router();
 
@@ -71,46 +72,59 @@ router.post("/login", async (req, res) => {
 		[student_id, "student", admin_id, "admin"]
 	);
 
-	if (userQuery.rows.length === 0) {
-		return res.status(400).json({ message: "Invalid credentials" });
-	}
+	if (userQuery.rows.length === 0) return res.status(400).json({ message: "Invalid credentials" });
 
 	const user = userQuery.rows[0];
 	const validPassword = await bcrypt.compare(password, user.password);
+
 	if (!validPassword) return res.status(400).json({ message: "Invalid credentials" });
 
-	let activeSessionQuery = await pool.query(`
-		SELECT s.id
-		FROM sessions s
-		LEFT JOIN user_activities ua 
-		ON ua.session_id = s.id AND ua.activity_type = 'logout'
-		WHERE s.user_id = $1 AND s.ip_address = $2 AND s.user_agent = $3
-		GROUP BY s.id
-		HAVING COUNT(ua.id) = 0`,
-		[user.id, req.ip, req.headers["user-agent"]]
+	const ip = req.ip?.replace("::ffff:", "") || null;
+	const userAgent = req.headers["user-agent"];
+
+	let country = null, region = null, city = null;
+
+	if (ip && ip !== "127.0.0.1") {
+		try {
+			const geoRes = await axios.get(`http://ip-api.com/json/${ip}`);
+			if (geoRes.data.status === "success") {
+				country = geoRes.data.country;
+				region = geoRes.data.regionName;
+				city = geoRes.data.city;
+			}
+		} catch (err) {
+			console.warn("IP lookup failed:", err.message);
+		}
+	}
+
+	const activeSessionQuery = await pool.query(
+		`SELECT id FROM sessions 
+		WHERE user_id = $1 
+		AND ip_address = $2 
+		AND user_agent = $3 
+		AND logout_time IS NULL`,
+		[user.id, ip, userAgent]
 	);
 
 	let sessionId;
 
 	if (activeSessionQuery.rows.length > 0) {
 		sessionId = activeSessionQuery.rows[0].id;
-
 		await pool.query(
-			"INSERT INTO user_activities (session_id, activity_type) VALUES ($1, 'login')",
+			`UPDATE sessions 
+			SET last_access = NOW() 
+			WHERE id = $1`,
 			[sessionId]
 		);
 	} else {
 		const newSession = await pool.query(
-			"INSERT INTO sessions (user_id, ip_address, user_agent) VALUES ($1, $2, $3) RETURNING id",
-			[user.id, req.ip, req.headers["user-agent"]]
+			`INSERT INTO sessions 
+			(user_id, ip_address, user_agent, country, region, city, created_at, last_access)
+			VALUES ($1,$2,$3,$4,$5,$6,NOW(),NOW())
+			RETURNING id`,
+			[user.id, ip, userAgent, country, region, city]
 		);
-
 		sessionId = newSession.rows[0].id;
-
-		await pool.query(
-			"INSERT INTO user_activities (session_id, activity_type) VALUES ($1, 'login')",
-			[sessionId]
-		);
 	}
 
 	const response = {
@@ -118,7 +132,11 @@ router.post("/login", async (req, res) => {
 		...(role === "student" ? { student_id: user.student_id } : { admin_id: user.admin_id }),
 		role: user.role,
 		created_at: formatDateToObject(user.created_at),
-		session_id: sessionId
+		session_id: sessionId,
+		ip,
+		country,
+		region,
+		city
 	};
 
 	const token = generateToken(response, sessionId);
@@ -131,7 +149,9 @@ router.post("/logout", authenticateToken, async (req, res) => {
 
 	try {
 		await pool.query(
-			"INSERT INTO user_activities (session_id, activity_type) VALUES ($1, 'logout')",
+			`UPDATE sessions 
+			SET logout_time = NOW() 
+			WHERE id = $1`,
 			[sessionId]
 		);
 
@@ -148,7 +168,9 @@ router.get("/me", authenticateToken, async (req, res) => {
 
 	try {
 		await pool.query(
-			"INSERT INTO user_activities (session_id, activity_type) VALUES ($1, 'last_access')",
+			`UPDATE sessions 
+			SET last_access = NOW() 
+			WHERE id = $1`,
 			[sessionId]
 		);
 
